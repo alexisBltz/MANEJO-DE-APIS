@@ -1,30 +1,140 @@
 import os.path
-
+import io
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseDownload
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/classroom.courses.readonly",
-          "https://www.googleapis.com/auth/drive.metadata.readonly",
-          "https://www.googleapis.com/auth/classroom.courseworkmaterials"]
+SCOPES = [
+
+"https://www.googleapis.com/auth/classroom.courses.readonly",
+"https://www.googleapis.com/auth/drive.metadata.readonly",
+"https://www.googleapis.com/auth/classroom.courseworkmaterials",
+"https://www.googleapis.com/auth/classroom.topics",
+"https://www.googleapis.com/auth/drive.readonly",
+"https://www.googleapis.com/auth/classroom.topics.readonly",
+
+]
 
 
 def main():
-  creds = otorgarPermisos()
-  idClassrooms = mostrarClassroom(creds)
-  print(idClassrooms)
-  mi_clase , clase_modelo = idClassrooms
-  sacarlinksSemana(creds, idClassrooms[clase_modelo])
-  #drive(creds)
+    creds = otorgarPermisos()
+    idClassrooms = mostrarClassroom(creds)
+    print(idClassrooms)
+    mi_clase , clase_modelo = idClassrooms
+    linksDriveMaterials = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS SEMANA 1')
+    prueba = linksDriveMaterials[0]
+    nombre = prueba['id']
+    #prueba = dowloadMaterials(creds, nombre)
 
-def obtener_id_tema_por_nombre(creds, course_id_modelo, nombre_tema):
+    #obtener_lista_topics(creds, idClassrooms[mi_clase])
+    topics = [
+        "650438447902",
+        "650443467764",
+        "650436816375",
+        "646645337765",
+        "646645085022",
+        "650438232097",
+        "650438874831",
+        "639270274659",
+        "650438418939",
+        "650438457213",
+        "646644075569",
+        "646645343568",
+        "650438564658",
+        "650438701840",
+        "650439967065",
+        "646645573715",
+        "650439922488",
+    ]
+
+def subirMaterial(creds,topics,course_id_aula, materials):
+    try:
+        service = build('classroom', 'v1', credentials=creds)
+        # agregar materiales:
+        for x in range(14):
+            """
+            tomos = {
+                "courseId": course_id_aula,
+                "topicId": cursos[x],
+                "title": "TOMO 2",
+                "description": "",
+                "materials": [
+                    {
+                        'link': {
+                            'url': urlTomo[x]
+                        },
+                    }
+                ],
+                "state": "DRAFT",
+                "scheduledTime": "2023-11-05T02:30:00Z",
+            }
+            """
+            practicas = {
+                "courseId": course_id_aula,
+                "topicId": topics[x],
+                "title": "PRÁCTICA " + "test",
+                "description": "",
+                "materials": [
+                    {
+                        'link': {
+                            'url': urlPracticas[x]
+                        },
+                    }
+                ],
+                "state": "DRAFT",
+                "scheduledTime": "2023-12-09T02:00:00Z",
+            }
+
+            solucionarios = {
+                "courseId": course_id_aula,
+                "topicId": topics[x],
+                "title": "SOLUCIONARIO " + "test",
+                "description": "",
+                "materials": [
+                    {
+                        'link': {
+                            'url': urlSolucionarios[x]
+                        },
+                    }
+                ],
+                "state": "DRAFT",
+                "scheduledTime": "2023-12-09T15:00:00Z",
+            }
+
+            # service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=tomos).execute()
+            service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=practicas).execute()
+            service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=solucionarios).execute()
+
+
+
+
+    except HttpError as error:
+        print('An error occurred: %s' % error)
+def obtener_lista_topics(creds, course_id):
+    service = build('classroom', 'v1', credentials=creds)
+
+    # Obtener lista de topics
+    topics = service.courses().topics().list(courseId=course_id).execute()
+
+    # Mostrar información de los topics
+    if 'topic' in topics:
+        lista_topics = topics['topic']
+        for topic in lista_topics:
+            #print(f"ID del Topic: {topic['topicId']}")
+            #print(f"Nombre del Topic: {topic['name']}")
+            print(f"\"{topic['topicId']}\",")
+    else:
+        print("No se encontraron topics en el curso.")
+
+def obtener_idTopic_tema_por_nombre(creds, course_id, nombre_tema):
     service = build('classroom', 'v1', credentials=creds)
 
     # Obtener la lista de temas del curso
-    lista_temas = service.courses().topics().list(courseId=course_id_modelo).execute()
+    lista_temas = service.courses().topics().list(courseId=course_id).execute()
 
     for tema in lista_temas.get('topic', []):
         if tema['name'] == nombre_tema:
@@ -33,23 +143,56 @@ def obtener_id_tema_por_nombre(creds, course_id_modelo, nombre_tema):
     # Devolver None si no se encuentra el tema
     return None
 
-def sacarlinksSemana(creds , course_id_modelo, topic):
+def linkDriveXsemana(creds, course_id_modelo, nameMaterial):
+    info_drive_list = []
     service = build('classroom', 'v1', credentials=creds)
 
     listaMateriales = service.courses().courseWorkMaterials().list(courseId=course_id_modelo).execute()
     print(listaMateriales)
+
     for material in listaMateriales['courseWorkMaterial']:
+        print(material['title'])
+        if material['title']==nameMaterial:
+            #print(f"Material de trabajo en el tema con ID: {topic_id}")
             for material_info in material['materials']:
                 if 'driveFile' in material_info:
                     drive_file_info = material_info['driveFile']['driveFile']
 
                     drive_file_id = drive_file_info['id']
-                    drive_file_title = drive_file_info['title']
-                    print(f"NOMBRE: {drive_file_title}")
-                    print(f"ID DRIVE: {drive_file_id}")
-
+                    #pondremos ese :2 para que nos retorne el numero no mas uwu
+                    drive_file_title = drive_file_info['title'][:2]
+                    info_drive_list.append(
+                        {
+                            'nombre': drive_file_title,
+                            'id': drive_file_id
+                        }
+                    )
+                    print(info_drive_list)
                 else:
                     print("No hay información de Google Drive en este material de trabajo.")
+
+
+    return info_drive_list
+
+def dowloadMaterials(creds, file_id):
+    try:
+        # create drive api client
+        service = build("drive", "v3", credentials=creds)
+
+        # pylint: disable=maybe-no-member
+        request = service.files().get_media(fileId=file_id)
+        file = io.BytesIO()
+        downloader = MediaIoBaseDownload(file, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+            print(f"Download {int(status.progress() * 100)}.")
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        file = None
+
+    return file.getvalue() if file else None
 
 def drive(creds):
     folder_id = 'MODELOS DE PARTE'
