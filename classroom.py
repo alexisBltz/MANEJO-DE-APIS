@@ -6,6 +6,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaFileUpload
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = [
@@ -25,89 +26,79 @@ def main():
     idClassrooms = mostrarClassroom(creds)
     print(idClassrooms)
     mi_clase , clase_modelo = idClassrooms
-    linksDriveMaterials = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS SEMANA 1')
-    prueba = linksDriveMaterials[0]
+    linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS SEMANA 1')
+    linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'PRÁCTICAS SEMANA 2')
+    prueba = linksDriveMaterials_SOLUCIONARIOS[0]
     nombre = prueba['id']
-    #prueba = dowloadMaterials(creds, nombre)
+    pruebaDowload = dowloadMaterials(creds, nombre)
+    test = uploadMaterials(creds)
+    print(test)
+    #subirMaterial(creds, "650438447902", idClassrooms[mi_clase],pruebaDowload)
+
 
     #obtener_lista_topics(creds, idClassrooms[mi_clase])
     topics = [
-        "650438447902",
-        "650443467764",
-        "650436816375",
-        "646645337765",
-        "646645085022",
-        "650438232097",
-        "650438874831",
-        "639270274659",
-        "650438418939",
-        "650438457213",
-        "646644075569",
-        "646645343568",
-        "650438564658",
-        "650438701840",
-        "650439967065",
-        "646645573715",
-        "650439922488",
+        "650438447902","650443467764","650436816375","646645337765","646645085022","650438232097","650438874831","639270274659","650438418939",
+        "650438457213","646644075569","646645343568","650438564658","650438701840","650439967065","646645573715","650439922488",
     ]
 
 def subirMaterial(creds,topics,course_id_aula, materials):
     try:
         service = build('classroom', 'v1', credentials=creds)
         # agregar materiales:
-        for x in range(14):
-            """
-            tomos = {
-                "courseId": course_id_aula,
-                "topicId": cursos[x],
-                "title": "TOMO 2",
-                "description": "",
-                "materials": [
-                    {
-                        'link': {
-                            'url': urlTomo[x]
-                        },
-                    }
-                ],
-                "state": "DRAFT",
-                "scheduledTime": "2023-11-05T02:30:00Z",
-            }
-            """
-            practicas = {
-                "courseId": course_id_aula,
-                "topicId": topics[x],
-                "title": "PRÁCTICA " + "test",
-                "description": "",
-                "materials": [
-                    {
-                        'link': {
-                            'url': urlPracticas[x]
-                        },
-                    }
-                ],
-                "state": "DRAFT",
-                "scheduledTime": "2023-12-09T02:00:00Z",
-            }
+        #for x in range(14):
+        """
+        tomos = {
+            "courseId": course_id_aula,
+            "topicId": cursos[x],
+            "title": "TOMO 2",
+            "description": "",
+            "materials": [
+                {
+                    'link': {
+                        'url': urlTomo[x]
+                    },
+                }
+            ],
+            "state": "DRAFT",
+            "scheduledTime": "2023-11-05T02:30:00Z",
+        }
+        """
+        practicas = {
+            "courseId": course_id_aula,
+            "topicId": topics[0],
+            "title": "PRÁCTICA " + "test",
+            "description": "",
+            "materials": [
+                {
+                    'driveFile': {
+                        "id": materials,
+                    },
+                }
+            ],
+            "state": "DRAFT",
+            "scheduledTime": "2023-12-09T02:00:00Z",
+        }
 
-            solucionarios = {
-                "courseId": course_id_aula,
-                "topicId": topics[x],
-                "title": "SOLUCIONARIO " + "test",
-                "description": "",
-                "materials": [
-                    {
-                        'link': {
-                            'url': urlSolucionarios[x]
-                        },
-                    }
-                ],
-                "state": "DRAFT",
-                "scheduledTime": "2023-12-09T15:00:00Z",
-            }
+        solucionarios = {
+            "courseId": course_id_aula,
+            "topicId": topics[0],
+            "title": "SOLUCIONARIO " + "test",
+            "description": "",
+            "materials": [
+                {
+                    'link': {
+                        #'url': urlSolucionarios[x]
+                    },
+                }
+            ],
+            "state": "DRAFT",
+            "scheduledTime": "2023-12-09T15:00:00Z",
+        }
 
-            # service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=tomos).execute()
-            service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=practicas).execute()
-            service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=solucionarios).execute()
+        # service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=tomos).execute()
+        service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=practicas).execute()
+        #service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=solucionarios).execute()
 
 
 
@@ -167,13 +158,38 @@ def linkDriveXsemana(creds, course_id_modelo, nameMaterial):
                             'id': drive_file_id
                         }
                     )
-                    print(info_drive_list)
+                    #print(info_drive_list)
                 else:
                     print("No hay información de Google Drive en este material de trabajo.")
 
 
     return info_drive_list
 
+def uploadMaterials(creds, file_id, file_name):
+
+    try:
+        # Descargar el contenido del archivo desde Google Drive
+        file_content = dowloadMaterials(creds, file_id)
+
+        # create drive api client
+        service = build("drive", "v3", credentials=creds)
+
+        file_metadata = {"name": file_name}
+        media = MediaFileUpload(io.BytesIO(file_content), mimetype="application/pdf")
+
+        # pylint: disable=maybe-no-member
+        file = (
+            service.files()
+            .create(body=file_metadata, media_body=media, fields="id")
+            .execute()
+        )
+        print(f'File ID: {file.get("id")}')
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        file = None
+
+    return file.get("id") if file else None
 def dowloadMaterials(creds, file_id):
     try:
         # create drive api client
