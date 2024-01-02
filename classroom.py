@@ -17,91 +17,124 @@ SCOPES = [
 "https://www.googleapis.com/auth/classroom.topics",
 "https://www.googleapis.com/auth/drive.readonly",
 "https://www.googleapis.com/auth/classroom.topics.readonly",
+"https://www.googleapis.com/auth/drive.file",
 
 ]
 
 
 def main():
+    #otorgamos permisos
     creds = otorgarPermisos()
+
+    # obtener_lista_topics(creds, idClassrooms[mi_clase])
+    topics = [
+        "650438447902", "650443467764", "650436816375", "646645337765", "646645085022", "650438232097", "650438874831",
+        "639270274659", "650438418939",
+        "650438457213", "646644075569", "646645343568", "650438564658", "650438701840", "650439967065", "646645573715",
+        "650439922488",
+    ]
+
+    #sacamos ids de ambos classrooms
     idClassrooms = mostrarClassroom(creds)
-    print(idClassrooms)
+
+    #pones las partes del diccionario en dos variables
     mi_clase , clase_modelo = idClassrooms
-    linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS SEMANA 1')
-    linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'PRÁCTICAS SEMANA 2')
-    prueba = linksDriveMaterials_SOLUCIONARIOS[0]
-    nombre = prueba['id']
-    pruebaDowload = dowloadMaterials(creds, nombre)
-    test = uploadMaterials(creds)
-    print(test)
+
+
+    #NUmero de semana que estamos
+    n=2
+    #Sacamos los links de las practicas y solucionarios respectivos
+    linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS SEMANA '+str(n-1))
+    linksDriveMaterials_PRACTICAS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'PRÁCTICAS SEMANA '+str(n))
+    linksDriveMaterials_TOMOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'TOMOS 1')
+
+    #Sacamos los datos de la lista de diccionarios
+    linkDriveSol = linksDriveMaterials_SOLUCIONARIOS[0]
+    linkDrivePrac = linksDriveMaterials_PRACTICAS[0]
+    nameS, idS = linkDriveSol
+    nameP, idP = linkDriveSol
+    print(linkDriveSol[idS] +" ---"+ linkDriveSol[nameS])
+
+    #Vemos el id del curso al que pertenece
+    topic = topics[int(linkDriveSol[nameS])]
+
+    #SAcamos el id una vez subido a nuestro a nuestro google drive
+
+    #Sol
+    Smaterialsbytes=dowloadMaterials(creds, linkDriveSol[idS])
+    print(Smaterialsbytes)
+    idDriveMaterialUploadS = uploadMaterials(creds, Smaterialsbytes, "test")
+    print(idDriveMaterialUploadS)
+    subirMaterial(creds, topic, idClassrooms[mi_clase], idDriveMaterialUploadS, "S")
+
+    #Prac
+    materialsbytes = dowloadMaterials(creds, idP)
+    idDriveMaterialUpload = uploadMaterials(creds, materialsbytes, "test")
+    #print(idDrive)
+
     #subirMaterial(creds, "650438447902", idClassrooms[mi_clase],pruebaDowload)
 
 
-    #obtener_lista_topics(creds, idClassrooms[mi_clase])
-    topics = [
-        "650438447902","650443467764","650436816375","646645337765","646645085022","650438232097","650438874831","639270274659","650438418939",
-        "650438457213","646644075569","646645343568","650438564658","650438701840","650439967065","646645573715","650439922488",
-    ]
 
-def subirMaterial(creds,topics,course_id_aula, materials):
+
+def subirMaterial(creds, topics, course_id, materials, identificador):
     try:
         service = build('classroom', 'v1', credentials=creds)
         # agregar materiales:
         #for x in range(14):
-        """
-        tomos = {
-            "courseId": course_id_aula,
-            "topicId": cursos[x],
-            "title": "TOMO 2",
-            "description": "",
-            "materials": [
-                {
-                    'link': {
-                        'url': urlTomo[x]
-                    },
-                }
-            ],
-            "state": "DRAFT",
-            "scheduledTime": "2023-11-05T02:30:00Z",
-        }
-        """
-        practicas = {
-            "courseId": course_id_aula,
-            "topicId": topics[0],
-            "title": "PRÁCTICA " + "test",
-            "description": "",
-            "materials": [
-                {
-                    'driveFile': {
-                        "id": materials,
-                    },
-                }
-            ],
-            "state": "DRAFT",
-            "scheduledTime": "2023-12-09T02:00:00Z",
-        }
 
-        solucionarios = {
-            "courseId": course_id_aula,
-            "topicId": topics[0],
-            "title": "SOLUCIONARIO " + "test",
-            "description": "",
-            "materials": [
-                {
-                    'link': {
-                        #'url': urlSolucionarios[x]
-                    },
-                }
-            ],
-            "state": "DRAFT",
-            "scheduledTime": "2023-12-09T15:00:00Z",
-        }
-
-        # service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=tomos).execute()
-        service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=practicas).execute()
-        #service.courses().courseWorkMaterials().create(courseId=course_id_aula, body=solucionarios).execute()
-
-
-
+        if identificador=="T":
+            tomos = {
+                "courseId": course_id,
+                "topicId": topics,
+                "title": "TOMO 2",
+                "description": "",
+                "materials": [
+                    {
+                        'driveFile': {
+                            "id": materials,
+                        },
+                    }
+                ],
+                "state": "DRAFT",
+                "scheduledTime": "2023-11-05T02:30:00Z",
+            }
+            service.courses().courseWorkMaterials().create(courseId=course_id, body=tomos).execute()
+        elif identificador=="P":
+            practicas = {
+                "courseId": course_id,
+                "topicId": topics,
+                "title": "PRÁCTICA " + "test",
+                "description": "",
+                "materials": [
+                    {
+                        'driveFile': {
+                            "id": materials,
+                        },
+                    }
+                ],
+                "state": "DRAFT",
+                "scheduledTime": "2023-12-09T02:00:00Z",
+            }
+            service.courses().courseWorkMaterials().create(courseId=course_id, body=practicas).execute()
+        else:
+            solucionarios = {
+                "courseId": course_id,
+                "topicId": topics,
+                "title": "SOLUCIONARIO " + "test",
+                "description": "",
+                "materials": [
+                    {
+                        'driveFile': {
+                            "id": materials,
+                        },
+                    }
+                ],
+                #"state": "DRAFT",
+                #"scheduledTime": "2023-12-09T15:00:00Z",
+            }
+            service.courses().courseWorkMaterials().create(courseId=course_id, body=solucionarios).execute()
+            print("Material Subido")
 
     except HttpError as error:
         print('An error occurred: %s' % error)
@@ -139,10 +172,10 @@ def linkDriveXsemana(creds, course_id_modelo, nameMaterial):
     service = build('classroom', 'v1', credentials=creds)
 
     listaMateriales = service.courses().courseWorkMaterials().list(courseId=course_id_modelo).execute()
-    print(listaMateriales)
+    #print(listaMateriales)
 
     for material in listaMateriales['courseWorkMaterial']:
-        print(material['title'])
+        #print(material['title'])
         if material['title']==nameMaterial:
             #print(f"Material de trabajo en el tema con ID: {topic_id}")
             for material_info in material['materials']:
@@ -165,19 +198,20 @@ def linkDriveXsemana(creds, course_id_modelo, nameMaterial):
 
     return info_drive_list
 
-def uploadMaterials(creds, file_id, file_name):
-
+def uploadMaterials(creds, file_content, file_name):
     try:
-        # Descargar el contenido del archivo desde Google Drive
-        file_content = dowloadMaterials(creds, file_id)
-
         # create drive api client
         service = build("drive", "v3", credentials=creds)
 
         file_metadata = {"name": file_name}
-        media = MediaFileUpload(io.BytesIO(file_content), mimetype="application/pdf")
+
+        # Crear un archivo temporal en tu sistema de archivos local
+        temp_file_path = "temp_file.pdf"
+        with open(temp_file_path, "wb") as temp_file:
+            temp_file.write(file_content)
 
         # pylint: disable=maybe-no-member
+        media = MediaFileUpload(temp_file_path, mimetype="application/pdf")
         file = (
             service.files()
             .create(body=file_metadata, media_body=media, fields="id")
