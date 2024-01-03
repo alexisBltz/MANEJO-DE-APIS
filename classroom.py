@@ -8,7 +8,8 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.http import MediaFileUpload
 
-# If modifying these scopes, delete the file token.json.
+
+# permisos
 SCOPES = [
 
 "https://www.googleapis.com/auth/classroom.courses.readonly",
@@ -26,59 +27,109 @@ def main():
     #otorgamos permisos
     creds = otorgarPermisos()
 
-    # obtener_lista_topics(creds, idClassrooms[mi_clase])
-    topics = [
-        "650438447902", "650443467764", "650436816375", "646645337765", "646645085022", "650438232097", "650438874831",
-        "639270274659", "650438418939",
-        "650438457213", "646644075569", "646645343568", "650438564658", "650438701840", "650439967065", "646645573715",
-        "650439922488",
-    ]
-
     #sacamos ids de ambos classrooms
     idClassrooms = mostrarClassroom(creds)
 
     #pones las partes del diccionario en dos variables
     mi_clase , clase_modelo = idClassrooms
 
+    obtener_lista_topics(creds, idClassrooms[mi_clase])
 
-    #NUmero de semana que estamos
+    topics = [
+        "646645337765",
+        "646645085022",
+        "650438232097",
+        "650438874831",
+        "639270274659",
+        "650438418939",
+        "650438457213",
+        "646644075569",
+        "646645343568",
+        "650438564658",
+        "650438701840",
+        "650439967065",
+        "646645573715",
+        "650439922488",
+    ]
+
+
+    # NUmero de semana que estamos
     n=2
-    #Sacamos los links de las practicas y solucionarios respectivos
+    # Sacamos los links de las practicas y solucionarios respectivos
     linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS SEMANA '+str(n-1))
     linksDriveMaterials_PRACTICAS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'PRÁCTICAS SEMANA '+str(n))
     linksDriveMaterials_TOMOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'TOMOS 1')
+    for x in range(14):
+        # Sacamos los datos de la lista de diccionarios
+        linkDriveSol = linksDriveMaterials_SOLUCIONARIOS[x]
+        linkDrivePrac = linksDriveMaterials_PRACTICAS[x]
+        #linkDriveTom = linksDriveMaterials_TOMOS[0]
+        nameS, idS = linkDriveSol
+        nameP, idP = linkDrivePrac
 
-    #Sacamos los datos de la lista de diccionarios
-    linkDriveSol = linksDriveMaterials_SOLUCIONARIOS[0]
-    linkDrivePrac = linksDriveMaterials_PRACTICAS[0]
-    nameS, idS = linkDriveSol
-    nameP, idP = linkDriveSol
-    print(linkDriveSol[idS] +" ---"+ linkDriveSol[nameS])
+        #PARA TOMOS
+        #nameT, idT = linkDriveTom
 
-    #Vemos el id del curso al que pertenece
-    topic = topics[int(linkDriveSol[nameS])]
+        """
+        print(linkDriveSol[nameS]+"---"+linkDriveSol[idS])
+        print("---"*10)
+        print(linkDrivePrac[nameP] + "---" + linkDriveSol[idP])
+        """
 
-    #SAcamos el id una vez subido a nuestro a nuestro google drive
+        # Vemos el id del curso al que pertenece
 
-    #Sol
-    Smaterialsbytes=dowloadMaterials(creds, linkDriveSol[idS])
-    print(Smaterialsbytes)
-    idDriveMaterialUploadS = uploadMaterials(creds, Smaterialsbytes, "test")
-    print(idDriveMaterialUploadS)
-    subirMaterial(creds, topic, idClassrooms[mi_clase], idDriveMaterialUploadS, "S")
+        topicS = topics[linkDriveSol[nameS]]
 
-    #Prac
-    materialsbytes = dowloadMaterials(creds, idP)
-    idDriveMaterialUpload = uploadMaterials(creds, materialsbytes, "test")
-    #print(idDrive)
+        """
+        print(linkDriveSol[nameS])
+        print("topic: "+ topicS)
+        """
 
-    #subirMaterial(creds, "650438447902", idClassrooms[mi_clase],pruebaDowload)
+        topicP = topics[linkDrivePrac[nameP]]
+
+        """
+        print(linkDrivePrac[nameP])
+        print("topic: " + topicP)
+        """
+
+        # PARA TOMOS
+        #topicT= topics[linkDrivePrac[nameT]]
+
+
+        # Sacamos el id una vez subido a nuestro a nuestro google drive
+
+        # Sol
+        Smaterialsbytes = dowloadMaterials(creds, linkDriveSol[idS])
+
+        idDriveMaterialUploadS = uploadMaterials(creds, Smaterialsbytes, "test")
+
+        subirMaterial(creds, topicS, idClassrooms[mi_clase], idDriveMaterialUploadS, "S")
+
+
+        # Prac
+        Pmaterialsbytes = dowloadMaterials(creds, linkDrivePrac[idP])
+
+        idDriveMaterialUploadP = uploadMaterials(creds, Pmaterialsbytes, "test")
+
+        subirMaterial(creds, topicP, idClassrooms[mi_clase], idDriveMaterialUploadP, "P")
+
+
+        """
+        #PARA TOMOS
+        Tmaterialsbytes = dowloadMaterials(creds, linkDrivePrac[idT])
+    
+        idDriveMaterialUploadT = uploadMaterials(creds, Tmaterialsbytes, "test")
+    
+        subirMaterial(creds, topicT, idClassrooms[mi_clase], idDriveMaterialUploadT, "P")
+        
+        """
 
 
 
 
-def subirMaterial(creds, topics, course_id, materials, identificador):
+def subirMaterial(creds, topic, course_id, materials, identificador):
     try:
+        print(materials)
         service = build('classroom', 'v1', credentials=creds)
         # agregar materiales:
         #for x in range(14):
@@ -86,14 +137,19 @@ def subirMaterial(creds, topics, course_id, materials, identificador):
         if identificador=="T":
             tomos = {
                 "courseId": course_id,
-                "topicId": topics,
+                "topicId": topic,
                 "title": "TOMO 2",
                 "description": "",
                 "materials": [
                     {
                         'driveFile': {
-                            "id": materials,
+                            'driveFile': {
+                                "title": "test",
+                                "id": materials,
+                            },
+                            "shareMode": "VIEW"
                         },
+
                     }
                 ],
                 "state": "DRAFT",
@@ -103,41 +159,54 @@ def subirMaterial(creds, topics, course_id, materials, identificador):
         elif identificador=="P":
             practicas = {
                 "courseId": course_id,
-                "topicId": topics,
+                "topicId": topic,
                 "title": "PRÁCTICA " + "test",
                 "description": "",
                 "materials": [
                     {
                         'driveFile': {
-                            "id": materials,
+                            'driveFile': {
+                                "title": "test",
+                                "id": materials,
+                            },
+                            "shareMode": "VIEW"
                         },
+
                     }
                 ],
                 "state": "DRAFT",
-                "scheduledTime": "2023-12-09T02:00:00Z",
+                #"scheduledTime": "2023-12-09T02:00:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=practicas).execute()
         else:
             solucionarios = {
                 "courseId": course_id,
-                "topicId": topics,
-                "title": "SOLUCIONARIO " + "test",
+                "topicId": topic,
+                "title": "SOLUCIONARIO test",
                 "description": "",
                 "materials": [
                     {
                         'driveFile': {
-                            "id": materials,
+                            'driveFile': {
+                                "title": "test",
+                                "id": materials,
+                            },
+                            "shareMode": "VIEW"
                         },
+
                     }
                 ],
-                #"state": "DRAFT",
+                "state": "DRAFT",
                 #"scheduledTime": "2023-12-09T15:00:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=solucionarios).execute()
             print("Material Subido")
 
+
     except HttpError as error:
-        print('An error occurred: %s' % error)
+        print(f'An error occurredddd: {error.response}')
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 def obtener_lista_topics(creds, course_id):
     service = build('classroom', 'v1', credentials=creds)
 
@@ -148,9 +217,11 @@ def obtener_lista_topics(creds, course_id):
     if 'topic' in topics:
         lista_topics = topics['topic']
         for topic in lista_topics:
-            #print(f"ID del Topic: {topic['topicId']}")
-            #print(f"Nombre del Topic: {topic['name']}")
-            print(f"\"{topic['topicId']}\",")
+
+            print(f"Nombre del Topic: {topic['name']}")
+            print(f"ID del Topic: {topic['topicId']}")
+            print("----"*10)
+            #print(f"\"{topic['topicId']}\",")
     else:
         print("No se encontraron topics en el curso.")
 
@@ -175,8 +246,7 @@ def linkDriveXsemana(creds, course_id_modelo, nameMaterial):
     #print(listaMateriales)
 
     for material in listaMateriales['courseWorkMaterial']:
-        #print(material['title'])
-        if material['title']==nameMaterial:
+        if material['title'] == nameMaterial:
             #print(f"Material de trabajo en el tema con ID: {topic_id}")
             for material_info in material['materials']:
                 if 'driveFile' in material_info:
@@ -184,10 +254,10 @@ def linkDriveXsemana(creds, course_id_modelo, nameMaterial):
 
                     drive_file_id = drive_file_info['id']
                     #pondremos ese :2 para que nos retorne el numero no mas uwu
-                    drive_file_title = drive_file_info['title'][:2]
+                    drive_file_title = drive_file_info['title'][:2].replace('.', '')
                     info_drive_list.append(
                         {
-                            'nombre': drive_file_title,
+                            'nombre': int(drive_file_title)-1,
                             'id': drive_file_id
                         }
                     )
@@ -217,7 +287,7 @@ def uploadMaterials(creds, file_content, file_name):
             .create(body=file_metadata, media_body=media, fields="id")
             .execute()
         )
-        print(f'File ID: {file.get("id")}')
+        #print(f'File ID: {file.get("id")}')
 
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -243,29 +313,6 @@ def dowloadMaterials(creds, file_id):
         file = None
 
     return file.getvalue() if file else None
-
-def drive(creds):
-    folder_id = 'MODELOS DE PARTE'
-    try:
-        service = build("drive", "v3", credentials=creds)
-
-        # Call the Drive v3 API
-        results = (
-            service.files()
-            .list(q=f"'{folder_id}' in parents", pageSize=10, fields="nextPageToken, files(id, name)")
-            .execute()
-        )
-        items = results.get("files", [])
-
-        if not items:
-            print("No files found.")
-            return
-        print("Files:")
-        for item in items:
-            print(f"{item['name']} ({item['id']})")
-    except HttpError as error:
-        # TODO(developer) - Handle errors from drive API.
-        print(f"An error occurred: {error}")
 
 
 def mostrarClassroom( creds ):
