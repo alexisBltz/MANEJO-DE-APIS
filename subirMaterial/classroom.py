@@ -54,7 +54,7 @@ def main():
 
 
     # NUmero de semana que estamos
-    n=2
+    n=3
     # Sacamos los links de las practicas y solucionarios respectivos
     linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS SEMANA '+str(n-1))
     linksDriveMaterials_PRACTICAS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'PRÁCTICAS SEMANA '+str(n))
@@ -78,14 +78,14 @@ def main():
 
         # Vemos el id del curso al que pertenece
 
-        topicS = topics[linkDriveSol[nameS]]
+        topicS = topics[int(linkDriveSol[nameS][:2].replace('.', ''))-1]
 
         """
         print(linkDriveSol[nameS])
         print("topic: "+ topicS)
         """
 
-        topicP = topics[linkDrivePrac[nameP]]
+        topicP = topics[int(linkDrivePrac[nameP][:2].replace('.', ''))-1]
 
         """
         print(linkDrivePrac[nameP])
@@ -101,17 +101,17 @@ def main():
         # Sol
         Smaterialsbytes = dowloadMaterials(creds, linkDriveSol[idS])
 
-        idDriveMaterialUploadS = uploadMaterials(creds, Smaterialsbytes, "test")
+        idDriveMaterialUploadS = uploadMaterials(creds, Smaterialsbytes, linkDriveSol[nameS])
 
-        subirMaterial(creds, topicS, idClassrooms[mi_clase], idDriveMaterialUploadS, "S")
+        subirMaterial(creds, topicS, idClassrooms[mi_clase], idDriveMaterialUploadS, "S", n-1)
 
 
         # Prac
         Pmaterialsbytes = dowloadMaterials(creds, linkDrivePrac[idP])
 
-        idDriveMaterialUploadP = uploadMaterials(creds, Pmaterialsbytes, "test")
+        idDriveMaterialUploadP = uploadMaterials(creds, Pmaterialsbytes, linkDrivePrac[nameP])
 
-        subirMaterial(creds, topicP, idClassrooms[mi_clase], idDriveMaterialUploadP, "P")
+        subirMaterial(creds, topicP, idClassrooms[mi_clase], idDriveMaterialUploadP, "P", n)
 
 
         """
@@ -127,7 +127,7 @@ def main():
 
 
 
-def subirMaterial(creds, topic, course_id, materials, identificador):
+def subirMaterial(creds, topic, course_id, materials, identificador, nrosemana):
     try:
         print(materials)
         service = build('classroom', 'v1', credentials=creds)
@@ -153,14 +153,14 @@ def subirMaterial(creds, topic, course_id, materials, identificador):
                     }
                 ],
                 "state": "DRAFT",
-                "scheduledTime": "2023-11-05T02:30:00Z",
+                "scheduledTime": "2024-01-05T02:30:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=tomos).execute()
         elif identificador=="P":
             practicas = {
                 "courseId": course_id,
                 "topicId": topic,
-                "title": "PRÁCTICA " + "test",
+                "title": "PRÁCTICA " + str(nrosemana),
                 "description": "",
                 "materials": [
                     {
@@ -175,14 +175,14 @@ def subirMaterial(creds, topic, course_id, materials, identificador):
                     }
                 ],
                 "state": "DRAFT",
-                #"scheduledTime": "2023-12-09T02:00:00Z",
+                "scheduledTime": "2024-01-06T22:30:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=practicas).execute()
         else:
             solucionarios = {
                 "courseId": course_id,
                 "topicId": topic,
-                "title": "SOLUCIONARIO test",
+                "title": "SOLUCIONARIO "+ str(nrosemana),
                 "description": "",
                 "materials": [
                     {
@@ -197,7 +197,7 @@ def subirMaterial(creds, topic, course_id, materials, identificador):
                     }
                 ],
                 "state": "DRAFT",
-                #"scheduledTime": "2023-12-09T15:00:00Z",
+                "scheduledTime": "2024-01-06T22:30:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=solucionarios).execute()
             print("Material Subido")
@@ -205,6 +205,27 @@ def subirMaterial(creds, topic, course_id, materials, identificador):
 
     except HttpError as error:
         print(f'An error occurredddd: {error.response}')
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+
+
+def dowloadAndUploadMaterials(creds, file_id, file_name, topic, course_id, identificador, nrosemana):
+    try:
+        # create drive api client
+        service = build("drive", "v3", credentials=creds)
+
+        # Descargar el archivo
+        file_content = dowloadMaterials(creds, file_id)
+
+        if file_content:
+            # Subir el archivo
+            uploaded_file_id, uploaded_file_name = uploadMaterials(creds, file_content, file_name)
+
+            # Subir el material a Classroom
+            subirMaterial(creds, topic, course_id, uploaded_file_id, identificador, nrosemana)
+            print(f"Material subido a Classroom con ID: {uploaded_file_id} y nombre: {uploaded_file_name}")
+
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 def obtener_lista_topics(creds, course_id):
@@ -254,10 +275,10 @@ def linkDriveXsemana(creds, course_id_modelo, nameMaterial):
 
                     drive_file_id = drive_file_info['id']
                     #pondremos ese :2 para que nos retorne el numero no mas uwu
-                    drive_file_title = drive_file_info['title'][:2].replace('.', '')
+                    drive_file_title = drive_file_info['title']
                     info_drive_list.append(
                         {
-                            'nombre': int(drive_file_title)-1,
+                            'nombre': drive_file_title,
                             'id': drive_file_id
                         }
                     )
