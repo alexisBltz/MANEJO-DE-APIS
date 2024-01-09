@@ -49,7 +49,7 @@ def move_and_rename_files(service, folder_id_origen, folder_id_destino, nuevo_pr
             fecha_indicada = datetime.strptime(fecha_video, '%d/%m/%Y')
             nombre_dia = fecha_indicada.strftime("%A").upper()
 
-            nameSubcarpeta = fecha_indicada.strftime(f'{nombre_dia} %d-%m-%Y')
+            nameSubcarpeta = fecha_indicada.strftime(f'{nombre_dia} %d/%m/%Y')
 
             print(nameSubcarpeta)
 

@@ -115,7 +115,7 @@ def copiarPortapapeles( indice, estado = None ):
 def tomarCaptura(id):
 
     with mss.mss() as mss_instance:
-        monitor = mss_instance.monitors[1]
+        monitor = mss_instance.monitors[2]
         screenshot = mss_instance.grab(monitor)
 
         img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")  # Convert to PIL.Image
