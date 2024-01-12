@@ -58,17 +58,17 @@ def main():
     # Sacamos los links de las practicas y solucionarios respectivos
     linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS '+str(n-1))
     linksDriveMaterials_PRACTICAS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'PRACTICAS SEMANA '+str(n))
-    linksDriveMaterials_TOMOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'TOMOS 1')
+    linksDriveMaterials_TOMOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'TOMO II')
     for x in range(14):
         # Sacamos los datos de la lista de diccionarios
         linkDriveSol = linksDriveMaterials_SOLUCIONARIOS[x]
         linkDrivePrac = linksDriveMaterials_PRACTICAS[x]
-        #linkDriveTom = linksDriveMaterials_TOMOS[0]
+        linkDriveTom = linksDriveMaterials_TOMOS[x]
         nameS, idS = linkDriveSol
         nameP, idP = linkDrivePrac
 
         #PARA TOMOS
-        #nameT, idT = linkDriveTom
+        nameT, idT = linkDriveTom
 
         """
         print(linkDriveSol[nameS]+"---"+linkDriveSol[idS])
@@ -93,7 +93,7 @@ def main():
         """
 
         # PARA TOMOS
-        #topicT= topics[linkDrivePrac[nameT]]
+        topicT= topics[int(linkDriveTom[nameT][:2].replace('.', ''))-1]
 
 
         # Sacamos el id una vez subido a nuestro a nuestro google drive
@@ -114,15 +114,15 @@ def main():
         subirMaterial(creds, topicP, idClassrooms[mi_clase], idDriveMaterialUploadP, "P", n)
 
 
-        """
+
         #PARA TOMOS
-        Tmaterialsbytes = dowloadMaterials(creds, linkDrivePrac[idT])
+        Tmaterialsbytes = dowloadMaterials(creds, linkDriveTom[idT])
     
-        idDriveMaterialUploadT = uploadMaterials(creds, Tmaterialsbytes, "test")
+        idDriveMaterialUploadT = uploadMaterials(creds, Tmaterialsbytes, linkDriveTom[nameT])
     
-        subirMaterial(creds, topicT, idClassrooms[mi_clase], idDriveMaterialUploadT, "P")
+        subirMaterial(creds, topicT, idClassrooms[mi_clase], idDriveMaterialUploadT, "T", n)
         
-        """
+
 
 
 
@@ -134,7 +134,7 @@ def subirMaterial(creds, topic, course_id, materials, identificador, nrosemana):
         # agregar materiales:
         #for x in range(14):
 
-        if identificador=="T":
+        if identificador == "T":
             tomos = {
                 "courseId": course_id,
                 "topicId": topic,
@@ -153,7 +153,7 @@ def subirMaterial(creds, topic, course_id, materials, identificador, nrosemana):
                     }
                 ],
                 "state": "DRAFT",
-                "scheduledTime": "2024-01-11T10:30:00Z",
+                "scheduledTime": "2024-01-12T20:30:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=tomos).execute()
         elif identificador=="P":
@@ -177,7 +177,7 @@ def subirMaterial(creds, topic, course_id, materials, identificador, nrosemana):
                 "state": "DRAFT",
                 "scheduledTime": "2024-01-11T22:30:00Z",
             }
-            service.courses().courseWorkMaterials().create(courseId=course_id, body=practicas).execute()
+            service.courses().courseWorkMaterials().create(courseId=course_id, body=practicas)
         else:
             solucionarios = {
                 "courseId": course_id,
