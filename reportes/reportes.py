@@ -22,7 +22,9 @@ from googleapiclient.http import MediaFileUpload
 from PIL import ImageGrab
 from google.oauth2 import service_account"""
 
+#CAMBIA TODOS LOS DIAS EL ID DE TU PARTEEEEEEEEEEEEEEEE
 
+sheetToday = "1XJ70lOnOg6zNEnG-Y1PfThAoosdYCrU84kEe0TwF6W8"
 
 # PANTALLA DE LA LAPTOP
 
@@ -271,12 +273,12 @@ def putCapSheets(name, fila, columna):
         # Itera sobre cada imagen y la inserta en la hoja de cálculo
 
         cell_reference = 'PARTE!' + columna + str(fila+11)
-        formula = '=IMAGE("'+ image_url + '\")'
+        formula = '=IMAGE(\"' + image_url + '\")'
         cell_body = {'range': f'{cell_reference}', 'values': [[formula]]}
 
         #ACA CAMBIA EL SHEET CADA DIA
 
-        service.spreadsheets().values().update(spreadsheetId="1mSKWONlgLvo5krPn-7OzjWXzQCdtGDAja5I9T6O6DCc", body=cell_body,
+        service.spreadsheets().values().update(spreadsheetId=sheetToday, body=cell_body,
                                                        range=f'{cell_reference}', valueInputOption='RAW').execute()
         print("IMAGEN SUBIDA")
 

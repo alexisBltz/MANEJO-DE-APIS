@@ -54,10 +54,10 @@ def main():
 
 
     # NUmero de semana que estamos
-    n=3
+    n=4
     # Sacamos los links de las practicas y solucionarios respectivos
-    linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS SEMANA '+str(n-1))
-    linksDriveMaterials_PRACTICAS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'PRÁCTICAS SEMANA '+str(n))
+    linksDriveMaterials_SOLUCIONARIOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'SOLUCIONARIOS '+str(n-1))
+    linksDriveMaterials_PRACTICAS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'PRACTICAS SEMANA '+str(n))
     linksDriveMaterials_TOMOS = linkDriveXsemana(creds, idClassrooms[clase_modelo], 'TOMOS 1')
     for x in range(14):
         # Sacamos los datos de la lista de diccionarios
@@ -153,7 +153,7 @@ def subirMaterial(creds, topic, course_id, materials, identificador, nrosemana):
                     }
                 ],
                 "state": "DRAFT",
-                "scheduledTime": "2024-01-05T02:30:00Z",
+                "scheduledTime": "2024-01-11T10:30:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=tomos).execute()
         elif identificador=="P":
@@ -175,7 +175,7 @@ def subirMaterial(creds, topic, course_id, materials, identificador, nrosemana):
                     }
                 ],
                 "state": "DRAFT",
-                "scheduledTime": "2024-01-06T22:30:00Z",
+                "scheduledTime": "2024-01-11T22:30:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=practicas).execute()
         else:
@@ -197,9 +197,9 @@ def subirMaterial(creds, topic, course_id, materials, identificador, nrosemana):
                     }
                 ],
                 "state": "DRAFT",
-                "scheduledTime": "2024-01-06T22:30:00Z",
+                "scheduledTime": "2024-01-11T22:30:00Z",
             }
-            service.courses().courseWorkMaterials().create(courseId=course_id, body=solucionarios).execute()
+            service.courses().courseWorkMaterials().create(courseId=course_id, body=solucionarios)
             print("Material Subido")
 
 

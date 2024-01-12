@@ -29,7 +29,7 @@ def authenticate():
 
 def move_and_rename_files(service, folder_id_origen, folder_id_destino, nuevo_prefijo):
     try:
-        locale.setlocale(locale.LC_TIME, 'es_ES.utf8')
+        locale.setlocale(locale.LC_TIME, 'es_ES.utf-8')
 
         response = service.files().list(
             q=f"'{folder_id_origen}' in parents and mimeType='video/mp4'",
@@ -47,14 +47,14 @@ def move_and_rename_files(service, folder_id_origen, folder_id_destino, nuevo_pr
             fecha_video = file['name'][22:24] + "/" + file['name'][19:21] + "/" + file['name'][14:18]
             print(fecha_video)
             fecha_indicada = datetime.strptime(fecha_video, '%d/%m/%Y')
-            nombre_dia = fecha_indicada.strftime("%A").upper()
+            nombre_dia = fecha_indicada.strftime("%A").encode('latin-1').decode('utf-8').upper()
 
             nameSubcarpeta = fecha_indicada.strftime(f'{nombre_dia} %d/%m/%Y')
 
             print(nameSubcarpeta)
 
             if hora_video == '06':
-                numero = "(PRIMERA GRABACIÓN"
+                numero = "(PRIMERA GRABACIÓN)"
             elif hora_video == '10':
                 numero = '(SEGUNDA GRABACIÓN)'
             else:
