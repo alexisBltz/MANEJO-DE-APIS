@@ -153,7 +153,7 @@ def subirMaterial(creds, topic, course_id, materials, identificador, nrosemana):
                     }
                 ],
                 "state": "DRAFT",
-                "scheduledTime": "2024-01-12T20:30:00Z",
+                "scheduledTime": "2024-01-13T20:30:00Z",
             }
             service.courses().courseWorkMaterials().create(courseId=course_id, body=tomos).execute()
         elif identificador=="P":

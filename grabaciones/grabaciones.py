@@ -121,11 +121,11 @@ def main():
     try:
         service = build("drive", "v3", credentials=creds)
 
-        folder_id_origen = '1NVp0MfPWLWTX3KwraZ9JB8HZzmmPF8T0'
+        folder_id_origen = '1NVp0MfPWLWTX3KwraZ9JB8HZzmmPF8T0' 
 
 
         #CAMBIA CADA QUE SE CAMBIE DE SEMANAAAAAAAAAAAAAAAAAAAAAAAA
-        folder_id_destino = '1xqFqS9tdUrs13qjWyzfZUw0-xqr7bTzy'
+        folder_id_destino = '1X4HryUzoP4qx86i9KGhDR55H3-OMZ8SH'
         nuevo_prefijo = 'nuevo_prefijo'
 
         move_and_rename_files(service, folder_id_origen, folder_id_destino, nuevo_prefijo)

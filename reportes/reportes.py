@@ -9,7 +9,7 @@ from plyer import notification
 #import webbrowser as web
 
 import pyperclip
-
+import locale
 import os.path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -24,7 +24,7 @@ from google.oauth2 import service_account"""
 
 #CAMBIA TODOS LOS DIAS EL ID DE TU PARTEEEEEEEEEEEEEEEE
 
-sheetToday = "1XJ70lOnOg6zNEnG-Y1PfThAoosdYCrU84kEe0TwF6W8"
+sheetToday = "1jPiO2xRoj5S8xpjqUkPo-9hwe_WQh5CrgRFONpcJCAc"
 
 # PANTALLA DE LA LAPTOP
 
@@ -115,13 +115,15 @@ def copiarPortapapeles( indice, estado = None ):
 
 
 def tomarCaptura(id):
+    locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 
     with mss.mss() as mss_instance:
         monitor = mss_instance.monitors[2]
         screenshot = mss_instance.grab(monitor)
 
         img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")  # Convert to PIL.Image
-        name = "c"+str(id)+"-"+str(datetime.datetime.now().strftime(("%m%d-%H%M")))+".png"
+        nombre_dia = datetime.datetime.now().strftime('%A').encode('latin-1').decode('utf-8').upper()
+        name = str(datetime.datetime.now().strftime(("%m-%d-%y %H:%M")))+f" {nombre_dia}.png"
         print(name)
         ruta_guardado= "D:\CEPRE\caps"
         ruta_completa =  ruta_guardado + "/" + name
@@ -273,7 +275,7 @@ def putCapSheets(name, fila, columna):
         # Itera sobre cada imagen y la inserta en la hoja de cálculo
 
         cell_reference = 'PARTE!' + columna + str(fila+11)
-        formula = '=IMAGE(\"' + image_url + '\")'
+        formula = '=HYPERLINK(\"' + image_url + '\",IMAGE(\"' + image_url + '\",2))'
         cell_body = {'range': f'{cell_reference}', 'values': [[formula]]}
 
         #ACA CAMBIA EL SHEET CADA DIA
